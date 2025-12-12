@@ -1,4 +1,4 @@
-# CodeBuds
+# CodeBuds - Code With Your Buddies!
 
 A sleek real-time code collaboration web app with a MacBook-style interface. 
 
