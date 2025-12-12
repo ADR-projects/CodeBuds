@@ -41,7 +41,7 @@ npm install
 
 ## Usage
 
-```bash
+```bash 
 # Start backend server
 cd backend
 npm start
