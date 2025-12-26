@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom'; // useNavigate hook added here
 import toast from 'react-hot-toast';
 import { Mic, MicOff } from 'lucide-react';
 import Editor from './Editor';
@@ -23,10 +23,20 @@ const Room = () => {
   useEffect(() => {
     const init = async () => {
       socketRef.current = await initSocket();
-    //   socketRef.current.emit(ACTIONS.JOIN, {
-    //     roomId,
-    //     username: location.state?.username,
-    //  });
+      // error handling
+      socketRef.current.on('connect_error', (err) => handleErrors(err));
+      socketRef.current.on('connect_failed', (err) => handleErrors(err));
+
+      const handleErrors = (e) => {
+        console.log('Socket connection error:', e);
+        toast.error('Socket connection failed, try again later.');
+        navigate('/');
+      };
+
+      socketRef.current.emit(ACTIONS.JOIN, {
+        roomId,
+        username: location.state?.username,
+     });
     };
     init();
   }, [roomId, username]);
@@ -57,6 +67,7 @@ const Room = () => {
     };
 
     try {
+      // TODO: CHANGE EVAL TO CODEMIRROR FUNCTIONALITY
       eval(code);
       setOutput(logs.length > 0 ? logs : ['Code executed successfully!']);
       //toast.success('Code executed!');
@@ -77,7 +88,9 @@ const Room = () => {
     toast.success('Left the room');
     navigate('/');
   };
-
+  if(!location.state){ // Redirect if username, room Id is not provided
+    navigate('/');
+  }
   return (
     <div className="h-screen bg-gray-900 flex flex-col overflow-hidden">
       <div className="bg-linear-to-r from-gray-800 to-gray-900 px-6 py-3 flex items-center justify-between border-b border-gray-700 shadow-lg">

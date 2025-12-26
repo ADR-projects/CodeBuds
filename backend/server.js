@@ -21,8 +21,31 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+const usersMap = {};
+const getAllClients = (roomId) => {
+  // here we get a map of room's clients using roomId, then make it an array and map through it
+  // we map the id with the username stored in usersMap
+  return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {
+    return {
+      socketId, 
+      user: usersMap[socketId]    
+    }
+  })
+}
+
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
+  socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
+    usersMap[socket.id] = {username};
+    socket.join(roomId);
+    console.log(`${username} joined room: ${roomId}`);
+    const clients = getAllClients(roomId);
+    console.log('Current clients in room:', clients);
+  });
+
+  // socket.on('disconnect', () => {
+  //   console.log('Client disconnected:', socket.id);
+  // });
 });
 
 server.listen(PORT, () => {
