@@ -9,6 +9,8 @@ import Terminal from './Terminal';
 import ACTIONS from '../Actions.js';
 import { initSocket } from '../socket.js';
 import { io } from "socket.io-client";
+import { CODE_SNIPPETS } from '../constants.js';
+import { executeCode } from '@/api';
 
 const Room = () => {
   const { roomId } = useParams();
@@ -16,12 +18,20 @@ const Room = () => {
   const navigate = useNavigate();
   const username = location.state?.username || 'Guest';
 
-  const [code, setCode] = useState('// Start coding here...\n\nfunction hello() {\n  console.log("Hello, World!");\n}\n\nhello();');
+  const [code, setCode] = useState(CODE_SNIPPETS['javascript']);
   const [output, setOutput] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
+  const [language, setLanguage] = useState('javascript');
   const socketRef = useRef(null);
   const [clients, setClients] = useState([]);
   // const connectedRef = useRef(false);
+
+  // Update code when language changes
+  useEffect(() => {
+    setCode(CODE_SNIPPETS[language] || '');
+    setLanguage(language);
+  }, [language]);
 
   useEffect(() => {
     const init = async () => {
@@ -88,25 +98,16 @@ const Room = () => {
 
   const runCode = () => {
     setOutput([]);
-    const logs = [];
-
-    const originalLog = console.log;
-    console.log = (...args) => {
-      logs.push(args.join(' '));
-      originalLog(...args);
-    };
-
-    try {
-      // TODO: CHANGE EVAL TO CODEMIRROR FUNCTIONALITY
-      eval(code);
-      setOutput(logs.length > 0 ? logs : ['Code executed successfully!']);
-      //toast.success('Code executed!');
-    } catch (error) {
+    if(!code) return;
+    setIsLoading(true);
+    executeCode(language, code).then(response => {
+      const outputData = response.run.output || 'Code executed successfully!';
+      setOutput([outputData]);
+    }).catch(error => {
       setOutput([`Error: ${error.message}`]);
-      // toast.error('Execution error!');
-    } finally {
-      console.log = originalLog;
-    }
+    }).finally(() => {
+      setIsLoading(false);
+    });
   };
 
   const toggleMic = () => {
@@ -131,13 +132,13 @@ const Room = () => {
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
-          <div className="flex items-center space-x-3"> {/*you can add something beside the heading here*/}
+          <div className="flex items-center space-x-5"> {/*you can add something beside the heading here*/}
             <div >
               <h2 className="text-white font-semibold">CodeBuds Editor</h2>
               <p className="text-gray-400 text-xs">Room: {roomId.slice(0, 8)}...</p>
             </div>
             <div>
-              <LanguageMenu></LanguageMenu>
+              <LanguageMenu selected={language} onChange={setLanguage}></LanguageMenu>
             </div>
           </div>
         </div>
@@ -173,11 +174,11 @@ const Room = () => {
         <div className="flex-1 flex flex-col">
           <div className="flex-1 border border-gray-700 m-2 rounded-lg overflow-hidden bg-gray-800 shadow-xl">
             <div className="h-full">
-              <Editor code={code} onChange={handleCodeChange} />
+              <Editor language={language} code={code} onChange={handleCodeChange} />
             </div>
           </div>
 
-          <Terminal output={output} />
+          <Terminal output={output} isLoading={isLoading} />
         </div>
 
         <div className="w-80 shrink-0">

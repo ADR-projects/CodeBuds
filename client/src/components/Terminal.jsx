@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const Terminal = ({ output }) => {
+const Terminal = ({ output, isLoading }) => {
     const [height, setHeight] = useState(200);
     const [isResizing, setIsResizing] = useState(false);
     const startYRef = useRef(0);
@@ -61,7 +61,11 @@ const Terminal = ({ output }) => {
 
             <div className="flex-1 overflow-y-auto p-4 font-mono text-sm">
                 <div className="text-green-400">
-                    {output.length === 0 ? (
+                    {isLoading ? (
+                        <div className="text-yellow-400 flex items-center gap-2">
+                            <span className="animate-spin">⏳</span> Executing code...
+                        </div>
+                    ) : output.length === 0 ? (
                         <div className="text-gray-500">Terminal output will appear here...</div>
                     ) : (
                         output.map((line, index) => (

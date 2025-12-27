@@ -1,11 +1,11 @@
 import { Editor as MonacoEditor } from '@monaco-editor/react';
 
-const Editor = ({ code, onChange }) => {
+const Editor = ({ language, code, onChange }) => {
   return (
     <div className="h-full w-full">
       <MonacoEditor
         height="100%"
-        defaultLanguage="javascript"
+        language={language}
         theme="vs-dark"
         value={code}
         onChange={onChange}
