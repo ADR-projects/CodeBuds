@@ -3,11 +3,12 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom'; // useNa
 import toast from 'react-hot-toast';
 import { Mic, MicOff } from 'lucide-react';
 import Editor from './Editor';
+import LanguageMenu from './LanguageMenu';
 import Aside from './Aside';
 import Terminal from './Terminal';
 import ACTIONS from '../Actions.js';
 import { initSocket } from '../socket.js';
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
 const Room = () => {
   const { roomId } = useParams();
@@ -19,34 +20,63 @@ const Room = () => {
   const [output, setOutput] = useState([]);
   const [isMicOn, setIsMicOn] = useState(false);
   const socketRef = useRef(null);
+  const [clients, setClients] = useState([]);
+  // const connectedRef = useRef(false);
 
   useEffect(() => {
     const init = async () => {
+      // if (connectedRef.current) return;
+
       socketRef.current = await initSocket();
-      // error handling
-      socketRef.current.on('connect_error', (err) => handleErrors(err));
-      socketRef.current.on('connect_failed', (err) => handleErrors(err));
 
       const handleErrors = (e) => {
         console.log('Socket connection error:', e);
         toast.error('Socket connection failed, try again later.');
         navigate('/');
       };
+      // error handling
+      socketRef.current.on('connect_error', (err) => handleErrors(err));
+      socketRef.current.on('connect_failed', (err) => handleErrors(err));
+
 
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
         username: location.state?.username,
-     });
+      });
+
+      // listening for joined event
+      socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
+        if (username !== location.state?.username) {
+          toast.success(`${username} joined the room.`);
+          console.log(`${username} joined`);
+        }
+        // updating clients list
+        setClients(clients);
+        // socketRef.current.emit(ACTIONS.SYNC_CODE, {
+        //   code,
+        //   socketId,
+        // });
+      });
+
+      // Listening for disconnected
+      socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
+        toast.success(`${username} left the room.`);
+        setClients((prev) => {
+          return prev.filter((client) => client.socketId !== socketId);
+        });
+      });
     };
+
     init();
+
+    // clearing all listeners and disconnecting socket on unmount
+    return () => {
+      socketRef.current.disconnect();
+      socketRef.current.off(ACTIONS.JOINED);
+      socketRef.current.off(ACTIONS.DISCONNECTED);
+    }
   }, [roomId, username]);
 
-  const [users] = useState([
-    { id: 1, username: username, isActive: true },
-    { id: 2, username: 'Alice', isActive: true },
-    { id: 3, username: 'Bob', isActive: false },
-    { id: 4, username: 'Charlie', isActive: true },
-  ]);
 
   useEffect(() => {
     toast.success(`Connected to room: ${roomId}`);
@@ -88,7 +118,8 @@ const Room = () => {
     toast.success('Left the room');
     navigate('/');
   };
-  if(!location.state){ // Redirect if username, room Id is not provided
+
+  if (!location.state) { // Redirect if username, room Id is not provided
     navigate('/');
   }
   return (
@@ -100,9 +131,14 @@ const Room = () => {
             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
             <div className="w-3 h-3 rounded-full bg-green-500"></div>
           </div>
-          <div>
-            <h2 className="text-white font-semibold">CodeBuds Editor</h2>
-            <p className="text-gray-400 text-xs">Room: {roomId.slice(0, 8)}...</p>
+          <div className="flex items-center space-x-3"> {/*you can add something beside the heading here*/}
+            <div >
+              <h2 className="text-white font-semibold">CodeBuds Editor</h2>
+              <p className="text-gray-400 text-xs">Room: {roomId.slice(0, 8)}...</p>
+            </div>
+            <div>
+              <LanguageMenu></LanguageMenu>
+            </div>
           </div>
         </div>
 
@@ -110,8 +146,8 @@ const Room = () => {
           <button
             onClick={toggleMic}
             className={`px-4 py-2 rounded-lg font-medium transition ${isMicOn
-                ? 'bg-green-600 hover:bg-green-700 text-white'
-                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
               }`}
           >
             {isMicOn ? <><Mic className="inline-block w-5" /> Mic On</> : <><MicOff className="inline-block w-5" /> Mic Off</>}
@@ -145,7 +181,7 @@ const Room = () => {
         </div>
 
         <div className="w-80 shrink-0">
-          <Aside users={users} />
+          <Aside users={clients} />
         </div>
       </div>
     </div>

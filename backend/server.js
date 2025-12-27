@@ -5,7 +5,8 @@ const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 const { Server } = require("socket.io");
-const ACTIONS = require('../client/src/Actions');
+const ACTIONS = require('./Actions');
+// const { use } = require('react');
 
 const server = http.createServer(app); // we created http server
 const io = new Server(server);
@@ -27,26 +28,45 @@ const getAllClients = (roomId) => {
   // we map the id with the username stored in usersMap
   return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {
     return {
-      socketId, 
-      user: usersMap[socketId]    
+      socketId,
+      user: usersMap[socketId]
     }
   })
 }
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
+
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
-    usersMap[socket.id] = {username};
+    usersMap[socket.id] = { username, roomId };
     socket.join(roomId);
     console.log(`${username} joined room: ${roomId}`);
     const clients = getAllClients(roomId);
     console.log('Current clients in room:', clients);
-  });
+    clients.forEach(({ socketId, user }) => {
+      io.to(socketId).emit(ACTIONS.JOINED, {
+        clients,
+        username,
+        socketId: socket.id,
+      })
+    });
+  }); // end of ACTIONS.JOIN
 
-  // socket.on('disconnect', () => {
-  //   console.log('Client disconnected:', socket.id);
-  // });
-});
+  socket.on('disconnecting', () => {
+    const rooms = [...socket.rooms];
+    rooms.forEach((roomId) => {
+      socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
+        socketId: socket.id,
+        username: usersMap[socket.id]?.username,
+      });
+    });
+    delete usersMap[socket.id];
+    socket.leave();
+  }); // end of disconnecting
+
+  // TODO: code change, sync code....
+
+}); // end of io.on connection
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

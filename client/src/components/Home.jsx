@@ -69,11 +69,13 @@ const Home = () => {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-gray-300 text-sm font-medium mb-2">
+                                <label htmlFor="roomId" className="block text-gray-300 text-sm font-medium mb-2">
                                     Room ID
                                 </label>
                                 <input
+                                    id="roomId"
                                     type="text"
+                                    autoComplete="room-id"
                                     placeholder="Enter room ID"
                                     value={roomId}
                                     onChange={(e) => setRoomId(e.target.value)}
@@ -83,11 +85,13 @@ const Home = () => {
                             </div>
 
                             <div>
-                                <label className="block text-gray-300 text-sm font-medium mb-2">
+                                <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2">
                                     Username
                                 </label>
                                 <input
+                                    id="username"
                                     type="text"
+                                    autoComplete="username"
                                     placeholder="Enter your username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
