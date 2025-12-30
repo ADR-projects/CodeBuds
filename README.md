@@ -10,8 +10,8 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 
 ## Features
 
-⌛ **Real-time code collaboration** - Code together in sync  - Coming soon
-✅ **JavaScript execution** - Run JS code and see output in a built-in terminal  
+✅ **Real-time code collaboration** - Code together in sync
+✅ **Code execution** - Run code and see output in a built-in terminal  
 ⏳ **Voice chat** - Coming soon  
 ✅ **Multi-language compilation** - Run code in C, C++, C#, Java, Python, Rust, Javascript, Typescript, Ruby, Go and PHP!  
 
@@ -19,7 +19,7 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 
 - **Frontend**: React
 - **Backend**: Node.js + Express.js
-- **Database**: MongoDB
+<!--- **Database**: MongoDB -->
 - **Real-time**: Socket.io
 - **UI**: MacBook-inspired design
 
