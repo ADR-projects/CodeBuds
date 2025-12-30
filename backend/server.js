@@ -64,7 +64,15 @@ io.on('connection', (socket) => {
     socket.leave();
   }); // end of disconnecting
 
-  // TODO: code change, sync code....
+  // Code change - broadcast to all other clients in the room
+  socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
+    socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
+  });
+
+  // Sync code - send current code to a specific client (when they join)
+  socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+    io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
+  });
 
 }); // end of io.on connection
 

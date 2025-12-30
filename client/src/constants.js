@@ -54,7 +54,7 @@ int main() {
   python: `def greet(name):
     print("Hello, " + name)
 
-greet("Alex")
+greet("ADR")
 `,
 
   csharp: `using System;
@@ -76,8 +76,8 @@ fn greet(user: &User) {
 
 fn main() {
     let user = User {
-        name: String::from("Alex"),
-        age: 21,
+        name: String::from("ADR"),
+        age: 20,
     };
 
     greet(&user);
@@ -89,7 +89,7 @@ fn main() {
     console.log("Hello, " + name);
 }
 
-greet("Alex");
+greet("ADR");
 `,
   typescript: `type User = {
   name: string;
@@ -100,7 +100,7 @@ function greet(user: User): void {
   console.log(\`Hello, \${user.name}! You are \${user.age} years old.\`);
 }
 
-greet({ name: "Alex", age: 21 });
+greet({ name: "ADR", age: 20 });
 `,
 
 
@@ -108,7 +108,7 @@ greet({ name: "Alex", age: 21 });
   puts "Hello, #{name}"
 end
 
-greet("Alex")
+greet("ADR")
 `,
 
   go: `package main
@@ -122,7 +122,7 @@ func main() {
 
   php: `<?php
 
-$name = "Alex";
+$name = "ADR";
 echo "Hello, " . $name;
 `,
 };

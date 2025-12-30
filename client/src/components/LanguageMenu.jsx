@@ -31,21 +31,21 @@ function LanguageMenu({ selected = 'javascript', onChange }) {
         <div className="relative cursor-pointer">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-750 text-white rounded-lg transition duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="flex items-center gap-1 sm:gap-2 px-2 py-1 sm:px-4 sm:py-2 bg-gray-700 hover:bg-gray-750 text-white rounded-lg transition duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
                 <img
                     src={selectedLang?.icon}
                     alt={selectedLang?.name}
-                    className="w-5 h-5 object-contain"
+                    className="w-4 h-4 sm:w-5 sm:h-5 object-contain"
                 />
 
-                <span className="text-sm font-medium">{selectedLang?.name}</span>
-                <ChevronDown className={`w-5 h-5 stroke-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <span className="hidden sm:inline text-sm font-medium">{selectedLang?.name}</span>
+                <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 stroke-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
 
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                <div className="absolute top-full left-0 mt-2 w-36 sm:w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
                     {LANGUAGES.map((lang) => (
                         <button
                             key={lang.id}
