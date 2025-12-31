@@ -83,6 +83,11 @@ const Room = () => {
         }
       });
 
+      // Listening for language changes from other clients
+      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({language}) => {
+        setLanguage(language);
+      });
+
       // Listening for disconnected
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
@@ -100,6 +105,7 @@ const Room = () => {
       socketRef.current.off(ACTIONS.JOINED);
       socketRef.current.off(ACTIONS.DISCONNECTED);
       socketRef.current.off(ACTIONS.CODE_CHANGE);
+      socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
     }
   }, [roomId, username]);
 
@@ -120,6 +126,17 @@ const Room = () => {
       socketRef.current.emit(ACTIONS.CODE_CHANGE, {
         roomId,
         code: value,
+      });
+    }
+  };
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage);
+    // Emit language change to other clients
+    if(socketRef.current) {
+      socketRef.current.emit(ACTIONS.LANGUAGE_CHANGE, {
+        roomId,
+        language: newLanguage,
       });
     }
   };
@@ -175,7 +192,7 @@ const Room = () => {
               <p className="text-gray-400 text-[10px] sm:text-xs">Room: {roomId.slice(0, 8)}...</p>
             </div>
             <div>
-              <LanguageMenu selected={language} onChange={setLanguage}></LanguageMenu>
+              <LanguageMenu selected={language} onChange={handleLanguageChange}></LanguageMenu>
             </div>
           </div>
         </div>

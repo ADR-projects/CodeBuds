@@ -73,7 +73,11 @@ io.on('connection', (socket) => {
   socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
     io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
   });
-
+  // Language change - broadcast to all other clients in the room
+    socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {
+    socket.in(roomId).emit(ACTIONS.LANGUAGE_CHANGE, { language });
+  });
+  
 }); // end of io.on connection
 
 server.listen(PORT, () => {
