@@ -181,7 +181,7 @@ const Room = () => {
         </div>
 
         <div className="flex items-center space-x-1 sm:space-x-3">
-          <button
+          {/* <button
             onClick={toggleMic}
             className={`px-2 py-1 sm:px-4 sm:py-2 rounded-lg font-medium transition text-xs sm:text-base ${isMicOn
               ? 'bg-green-600 hover:bg-green-700 text-white'
@@ -189,7 +189,7 @@ const Room = () => {
               }`}
           >
             {isMicOn ? <><Mic className="inline-block w-4 sm:w-5" /><span className="hidden sm:inline"> Mic On</span></> : <><MicOff className="inline-block w-4 sm:w-5" /><span className="hidden sm:inline"> Mic Off</span></>}
-          </button>
+          </button> */}
 
           <button
             onClick={runCode}
