@@ -218,8 +218,8 @@ const Room = () => {
           <Terminal output={output} isLoading={isLoading} />
         </div>
 
-        <div className="w-full sm:w-80 shrink-0 h-32 sm:h-auto">
-          <Aside users={clients} />
+        <div className="w-full sm:w-80 shrink-0 h-70 sm:h-auto">
+          <Aside users={clients} currentUserName={location.state?.username}/>
         </div>
       </div>
     </div>

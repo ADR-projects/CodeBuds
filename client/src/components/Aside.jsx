@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 
-const Aside = ({ users }) => {
+const Aside = ({ users, currentUserName }) => {
   const avatarColors = [
     'bg-blue-500',
     'bg-green-500',
@@ -39,7 +39,10 @@ const Aside = ({ users }) => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-medium truncate">
-                  {client.user?.username}
+                  {client.user?.username === currentUserName ?
+                   `${client.user?.username}(You)` :
+                   client.user?.username
+                  }
                 </p>
               </div>
             </div>
