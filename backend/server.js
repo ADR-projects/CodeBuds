@@ -8,7 +8,12 @@ const { Server } = require("socket.io");
 const ACTIONS = require('./Actions');
 
 const server = http.createServer(app); // we created http server
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins (for development)
+    methods: ["GET", "POST"]
+  }
+});
 
 app.get('/', (req, res) => {
   res.send('Hello from Codebuds backend!');
@@ -79,6 +84,6 @@ io.on('connection', (socket) => {
   
 }); // end of io.on connection
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
