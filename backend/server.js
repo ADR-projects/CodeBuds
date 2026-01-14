@@ -6,7 +6,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const { Server } = require("socket.io");
 const ACTIONS = require('./Actions');
-// const { use } = require('react');
 
 const server = http.createServer(app); // we created http server
 const io = new Server(server);
