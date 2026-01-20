@@ -129,9 +129,12 @@ io.on('connection', (socket) => {
     socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });
   });
 
-  // Sync code - send current code to a specific client (when they join)
-  socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
+  // Sync code and language - send current state to a specific client (when they join)
+  socket.on(ACTIONS.SYNC_CODE, ({ socketId, code, language }) => {
     io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
+    if (language) {
+      io.to(socketId).emit(ACTIONS.LANGUAGE_CHANGE, { language });
+    }
   });
   // Language change - broadcast to all other clients in the room
     socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {

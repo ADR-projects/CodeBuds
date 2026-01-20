@@ -76,9 +76,10 @@ const Room = () => {
         if (username !== location.state?.username) {
           toast.success(`${username} joined the room.`);
           console.log(`${username} joined`);
-          // Sync code to the newly joined user
+          // Sync code and language to the newly joined user
           socketRef.current.emit(ACTIONS.SYNC_CODE, {
             code: codeRef.current,
+            language: language,
             socketId,
           });
         }
