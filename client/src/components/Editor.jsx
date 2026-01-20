@@ -48,8 +48,7 @@ const getLanguageExtension = (language) => {
 const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) => {
   const editorContainerRef = useRef(null);
   const editorViewRef = useRef(null);
-  const editorRef = useRef(null);
-  const isLocalChange = useRef(false); // Track if change is from local typing
+  const initialCodeRef = useRef(code); // Store initial code for editor creation
 
   // Expose methods to parent component via ref
   useImperativeHandle(ref, () => ({
@@ -60,17 +59,31 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
         });
       }
     },
+    // Method to update content from remote changes only
+    setContent: (newCode) => {
+      if (editorViewRef.current) {
+        const currentContent = editorViewRef.current.state.doc.toString();
+        if (newCode !== currentContent) {
+          const cursorPos = editorViewRef.current.state.selection.main.head;
+          editorViewRef.current.dispatch({
+            changes: {
+              from: 0,
+              to: currentContent.length,
+              insert: newCode,
+            },
+            selection: { anchor: Math.min(cursorPos, newCode.length) },
+          });
+        }
+      }
+    },
   }));
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
-    editorRef.current = editorContainerRef.current; // do we need this.
 
     // the listener for changes in the editor
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        // Mark this as a local change so we don't re-apply it
-        isLocalChange.current = true;
         const value = update.state.doc.toString();
         onChange(value);
       }
@@ -82,7 +95,7 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
     });
 
     const state = EditorState.create({
-      doc: code,
+      doc: initialCodeRef.current,
       extensions: [
         basicSetup,
         oneDark,
@@ -108,32 +121,10 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
     };
   }, [language]);
 
-  // Update content when code prop changes externally (remote changes only)
+  // Update initial code ref when language changes (for editor recreation)
   useEffect(() => {
-    if (editorViewRef.current) {
-      // Skip if this is a local change we just made
-      if (isLocalChange.current) {
-        isLocalChange.current = false;
-        return;
-      }
-      
-      const currentContent = editorViewRef.current.state.doc.toString();
-      if (code !== currentContent) {
-        // Save cursor position
-        const cursorPos = editorViewRef.current.state.selection.main.head;
-        
-        editorViewRef.current.dispatch({
-          changes: {
-            from: 0,
-            to: currentContent.length,
-            insert: code,
-          },
-          // Try to restore cursor position (clamped to new content length)
-          selection: { anchor: Math.min(cursorPos, code.length) },
-        });
-      }
-    }
-  }, [code]);
+    initialCodeRef.current = code;
+  }, [language, code]);
 
   return (
     <div

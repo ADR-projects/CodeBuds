@@ -26,7 +26,6 @@ const Room = () => {
   const [language, setLanguage] = useState('javascript');
   const socketRef = useRef(null);
   const codeRef = useRef(code); // Keep track of current code for syncing
-  const isRemoteChange = useRef(false); // Flag to prevent emitting on remote changes
   const [clients, setClients] = useState([]);
   const editorRef = useRef(null); // Ref to access Editor methods
   const remoteCursorsRef = useRef({}); // Track remote cursor positions { socketId: { pos, username } }
@@ -91,12 +90,12 @@ const Room = () => {
       // Listening for code changes from other clients
       socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
         if (code !== null && code !== undefined) {
-          isRemoteChange.current = true;
-          setCode(code);
-          // Reset flag after state update
-          setTimeout(() => {
-            isRemoteChange.current = false;
-          }, 0);
+          // Update state for codeRef sync
+          codeRef.current = code;
+          // Directly update editor content via ref (avoids React state sync issues)
+          if (editorRef.current?.setContent) {
+            editorRef.current.setContent(code);
+          }
         }
       });
 
@@ -156,11 +155,6 @@ const Room = () => {
     toast.success(`Connected to room: ${roomId}`);
   }, [roomId]);
 
-  // Keep codeRef in sync with code state
-  useEffect(() => {
-    codeRef.current = code;
-  }, [code]);
-
   // Helper function to update editor with remote cursors
   const updateEditorCursors = () => {
     if (editorRef.current) {
@@ -185,8 +179,9 @@ const Room = () => {
 
   const handleCodeChange = (value) => {
     setCode(value);
-    // Only emit if this is a local change, not a remote one
-    if (socketRef.current && !isRemoteChange.current) {
+    codeRef.current = value;
+    // Emit local changes to other clients
+    if (socketRef.current) {
       socketRef.current.emit(ACTIONS.CODE_CHANGE, {
         roomId,
         code: value,
