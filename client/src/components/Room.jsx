@@ -66,6 +66,25 @@ const Room = () => {
         setMySocketId(socketRef.current.id);
       }
 
+      // Set up listeners BEFORE joining to avoid race conditions
+      // Listening for code changes from other clients
+      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+        if (code !== null && code !== undefined) {
+          // Update state for codeRef sync
+          codeRef.current = code;
+          // Directly update editor content via ref (avoids React state sync issues)
+          if (editorRef.current?.setContent) {
+            editorRef.current.setContent(code);
+          }
+        }
+      });
+
+      // Listening for language changes from other clients
+      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language: newLanguage }) => {
+        console.log('Received LANGUAGE_CHANGE:', newLanguage);
+        setLanguage(newLanguage);
+      });
+
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
         username: location.state?.username,
@@ -86,24 +105,6 @@ const Room = () => {
         // Update host and clients list
         setHostSocketId(hostSocketId);
         setClients(clients);
-      });
-
-      // Listening for code changes from other clients
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
-        if (code !== null && code !== undefined) {
-          // Update state for codeRef sync
-          codeRef.current = code;
-          // Directly update editor content via ref (avoids React state sync issues)
-          if (editorRef.current?.setContent) {
-            editorRef.current.setContent(code);
-          }
-        }
-      });
-
-      // Listening for language changes from other clients
-      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language: newLanguage }) => {
-        console.log('Received LANGUAGE_CHANGE:', newLanguage);
-        setLanguage(newLanguage);
       });
 
       // Listening for cursor changes from other clients
