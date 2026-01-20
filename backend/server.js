@@ -81,6 +81,16 @@ io.on('connection', (socket) => {
     socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {
     socket.in(roomId).emit(ACTIONS.LANGUAGE_CHANGE, { language });
   });
+
+  // Cursor change - broadcast cursor position to all other clients in the room
+  socket.on(ACTIONS.CURSOR_CHANGE, ({ roomId, cursorPos }) => {
+    const user = usersMap[socket.id];
+    socket.in(roomId).emit(ACTIONS.CURSOR_CHANGE, {
+      socketId: socket.id,
+      username: user?.username,
+      cursorPos,
+    });
+  });
   
 }); // end of io.on connection
 

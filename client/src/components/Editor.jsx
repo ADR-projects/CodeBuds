@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import { EditorView, basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
@@ -12,6 +12,7 @@ import { StreamLanguage } from '@codemirror/language';
 import { go } from '@codemirror/legacy-modes/mode/go';
 import { ruby } from '@codemirror/legacy-modes/mode/ruby';
 import { csharp } from '@codemirror/legacy-modes/mode/clike';
+import { remoteCursorsField, updateCursors } from '../remoteCursors';
 
 // sorry it's just a lot of languages
 // TODO figure out Monaco's way of syncing code
@@ -44,10 +45,21 @@ const getLanguageExtension = (language) => {
   }
 };
 
-const Editor = ({ language, code, onChange }) => {
+const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) => {
   const editorContainerRef = useRef(null);
   const editorViewRef = useRef(null);
   const editorRef = useRef(null);
+
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    updateRemoteCursors: (cursors) => {
+      if (editorViewRef.current) {
+        editorViewRef.current.dispatch({
+          effects: updateCursors.of(cursors),
+        });
+      }
+    },
+  }));
 
   useEffect(() => {
     if (!editorContainerRef.current) return;
@@ -60,6 +72,11 @@ const Editor = ({ language, code, onChange }) => {
         const value = update.state.doc.toString();
         onChange(value);
       }
+      // Emit cursor position changes
+      if (update.selectionSet && onCursorChange) {
+        const pos = update.state.selection.main.head;
+        onCursorChange(pos);
+      }
     });
 
     const state = EditorState.create({
@@ -69,6 +86,7 @@ const Editor = ({ language, code, onChange }) => {
         oneDark,
         getLanguageExtension(language),
         updateListener,
+        remoteCursorsField, // Add remote cursors support
         EditorView.theme({
           '&': { height: '100%' },
           '.cm-scroller': { overflow: 'auto' },
@@ -111,6 +129,6 @@ const Editor = ({ language, code, onChange }) => {
       style={{ height: '100%' }}
     />
   );
-};
+});
 
 export default Editor;

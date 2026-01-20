@@ -7,3 +7,42 @@
   font-weight: 400;
   font-style: normal;
 }
+
+/* Remote cursor styles */
+.remote-cursor-wrapper {
+  position: relative;
+  display: inline;
+  pointer-events: none;
+}
+
+.remote-cursor {
+  position: absolute;
+  width: 2px;
+  height: 1.2em;
+  margin-left: -1px;
+  border-left: 2px solid currentColor;
+  animation: cursor-blink 1s infinite;
+}
+
+.remote-cursor-label {
+  position: absolute;
+  top: -1.4em;
+  left: 0;
+  color: white;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.5;
+  }
+}

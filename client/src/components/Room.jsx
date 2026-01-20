@@ -11,6 +11,7 @@ import { initSocket } from '../socket.js';
 import { io } from "socket.io-client";
 import { CODE_SNIPPETS } from '../constants.js';
 import { executeCode } from '@/api';
+import { getColorForUser } from '../remoteCursors.js';
 
 const Room = () => {
   const { roomId } = useParams();
@@ -27,6 +28,8 @@ const Room = () => {
   const codeRef = useRef(code); // Keep track of current code for syncing
   const isRemoteChange = useRef(false); // Flag to prevent emitting on remote changes
   const [clients, setClients] = useState([]);
+  const editorRef = useRef(null); // Ref to access Editor methods
+  const remoteCursorsRef = useRef({}); // Track remote cursor positions { socketId: { pos, username } }
   // const connectedRef = useRef(false);
 
   // Update code when language changes
@@ -88,9 +91,19 @@ const Room = () => {
         setLanguage(language);
       });
 
+      // Listening for cursor changes from other clients
+      socketRef.current.on(ACTIONS.CURSOR_CHANGE, ({ socketId, username, cursorPos }) => {
+        // Update remote cursors map
+        remoteCursorsRef.current[socketId] = { pos: cursorPos, username };
+        updateEditorCursors();
+      });
+
       // Listening for disconnected
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
+        // Remove cursor for disconnected user
+        delete remoteCursorsRef.current[socketId];
+        updateEditorCursors();
         setClients((prev) => {
           return prev.filter((client) => client.socketId !== socketId);
         });
@@ -105,6 +118,7 @@ const Room = () => {
       socketRef.current.off(ACTIONS.JOINED);
       socketRef.current.off(ACTIONS.DISCONNECTED);
       socketRef.current.off(ACTIONS.CODE_CHANGE);
+      socketRef.current.off(ACTIONS.CURSOR_CHANGE);
       socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
     }
   }, [roomId, username]);
@@ -119,6 +133,18 @@ const Room = () => {
     codeRef.current = code;
   }, [code]);
 
+  // Helper function to update editor with remote cursors
+  const updateEditorCursors = () => {
+    if (editorRef.current) {
+      const cursors = Object.entries(remoteCursorsRef.current).map(([socketId, data], index) => ({
+        pos: data.pos,
+        color: getColorForUser(index),
+        username: data.username,
+      }));
+      editorRef.current.updateRemoteCursors(cursors);
+    }
+  };
+
   const handleCodeChange = (value) => {
     setCode(value);
     // Only emit if this is a local change, not a remote one
@@ -126,6 +152,16 @@ const Room = () => {
       socketRef.current.emit(ACTIONS.CODE_CHANGE, {
         roomId,
         code: value,
+      });
+    }
+  };
+
+  // Handle cursor position changes
+  const handleCursorChange = (pos) => {
+    if (socketRef.current) {
+      socketRef.current.emit(ACTIONS.CURSOR_CHANGE, {
+        roomId,
+        cursorPos: pos,
       });
     }
   };
@@ -228,7 +264,13 @@ const Room = () => {
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 border border-gray-700 m-1 sm:m-2 rounded-lg overflow-hidden bg-gray-800 shadow-xl">
             <div className="h-full">
-              <Editor language={language} code={code} onChange={handleCodeChange} />
+              <Editor 
+                ref={editorRef}
+                language={language} 
+                code={code} 
+                onChange={handleCodeChange}
+                onCursorChange={handleCursorChange}
+              />
             </div>
           </div>
 
