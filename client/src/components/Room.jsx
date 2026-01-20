@@ -30,7 +30,12 @@ const Room = () => {
   const [clients, setClients] = useState([]);
   const editorRef = useRef(null); // Ref to access Editor methods
   const remoteCursorsRef = useRef({}); // Track remote cursor positions { socketId: { pos, username } }
+  const [hostSocketId, setHostSocketId] = useState(null); // Track who is the host
+  const [mySocketId, setMySocketId] = useState(null); // Track own socket ID
   // const connectedRef = useRef(false);
+
+  // Check if current user is the host
+  const isHost = mySocketId && hostSocketId && mySocketId === hostSocketId;
 
   // Update code when language changes
   useEffect(() => {
@@ -53,6 +58,14 @@ const Room = () => {
       socketRef.current.on('connect_error', (err) => handleErrors(err));
       socketRef.current.on('connect_failed', (err) => handleErrors(err));
 
+      // Store own socket ID when connected
+      socketRef.current.on('connect', () => {
+        setMySocketId(socketRef.current.id);
+      });
+      // Also set immediately if already connected
+      if (socketRef.current.connected) {
+        setMySocketId(socketRef.current.id);
+      }
 
       socketRef.current.emit(ACTIONS.JOIN, {
         roomId,
@@ -60,7 +73,7 @@ const Room = () => {
       });
 
       // listening for joined event
-      socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId }) => {
+      socketRef.current.on(ACTIONS.JOINED, ({ clients, username, socketId, hostSocketId }) => {
         if (username !== location.state?.username) {
           toast.success(`${username} joined the room.`);
           console.log(`${username} joined`);
@@ -70,7 +83,8 @@ const Room = () => {
             socketId,
           });
         }
-        // updating clients list
+        // Update host and clients list
+        setHostSocketId(hostSocketId);
         setClients(clients);
       });
 
@@ -98,6 +112,18 @@ const Room = () => {
         updateEditorCursors();
       });
 
+      // Listening for host changes
+      socketRef.current.on(ACTIONS.HOST_CHANGED, ({ newHostSocketId, newHostUsername }) => {
+        setHostSocketId(newHostSocketId);
+        toast.success(`${newHostUsername} is now the host.`);
+      });
+
+      // Listening for being kicked
+      socketRef.current.on(ACTIONS.USER_KICKED, ({ kickedBy }) => {
+        toast.error(`You were kicked by ${kickedBy}`);
+        navigate('/');
+      });
+
       // Listening for disconnected
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
@@ -120,6 +146,8 @@ const Room = () => {
       socketRef.current.off(ACTIONS.CODE_CHANGE);
       socketRef.current.off(ACTIONS.CURSOR_CHANGE);
       socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
+      socketRef.current.off(ACTIONS.HOST_CHANGED);
+      socketRef.current.off(ACTIONS.USER_KICKED);
     }
   }, [roomId, username]);
 
@@ -142,6 +170,16 @@ const Room = () => {
         username: data.username,
       }));
       editorRef.current.updateRemoteCursors(cursors);
+    }
+  };
+
+  // Kick a user from the room (host only)
+  const kickUser = (targetSocketId) => {
+    if (socketRef.current && isHost) {
+      socketRef.current.emit(ACTIONS.KICK_USER, {
+        roomId,
+        targetSocketId,
+      });
     }
   };
 
@@ -225,7 +263,7 @@ const Room = () => {
           <div className="flex items-center space-x-2 sm:space-x-5">
             <div>
               <h2 className="text-white font-semibold text-sm sm:text-base">CodeBuds</h2>
-              <p className="text-gray-400 text-[10px] sm:text-xs">Room: {roomId.slice(0, 8)}...</p>
+              <p className="text-gray-400 text-[10px] sm:text-xs font-mono">Room: {roomId}</p>
             </div>
             <div>
               <LanguageMenu selected={language} onChange={handleLanguageChange}></LanguageMenu>
@@ -278,7 +316,14 @@ const Room = () => {
         </div>
 
         <div className="w-full sm:w-80 shrink-0 h-70 sm:h-auto">
-          <Aside users={clients} currentUserName={location.state?.username}/>
+          <Aside 
+            users={clients} 
+            currentUserName={location.state?.username}
+            mySocketId={mySocketId}
+            hostSocketId={hostSocketId}
+            isHost={isHost}
+            onKickUser={kickUser}
+          />
         </div>
       </div>
     </div>

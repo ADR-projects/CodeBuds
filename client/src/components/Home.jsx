@@ -1,31 +1,101 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { v4 as uuidv4 } from 'uuid';
 import toast from 'react-hot-toast';
 import Typewriter from 'typewriter-effect';
 import {Code} from 'lucide-react'
+import { initSocket } from '../socket.js';
+import ACTIONS from '../Actions.js';
+
+// Func to generate a short room code in XXX-XXX-XXX format
+const generateRoomCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Won't keep confusing chars (0,O,1,I)
+    let code = '';
+    for (let i = 0; i < 9; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+        if (i === 2 || i === 5) code += '-';
+    }
+    return code;
+};
+
+// Format input to XXX-XXX-XXX pattern
+const formatRoomCode = (value) => {
+    // FORCE remove all non-alphanumeric characters and convert to uppercase
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    // Add dashes after every 3 characters
+    const parts = cleaned.match(/.{1,3}/g) || [];
+    return parts.slice(0, 3).join('-');
+};
 
 const Home = () => {
     const [roomId, setRoomId] = useState('');
     const [username, setUsername] = useState('');
+    const [isJoining, setIsJoining] = useState(false);
     const navigate = useNavigate();
 
     const createNewRoom = () => {
-        const newRoomId = uuidv4();
+        const newRoomId = generateRoomCode();
         setRoomId(newRoomId);
-        toast.success('New room ID generated!');
+        toast.success('New room code generated!');
     };
 
-    const joinRoom = () => {
-        if (!roomId.trim()) {
-            toast.error('Please enter a room ID');
+    const handleRoomIdChange = (e) => {
+        const formatted = formatRoomCode(e.target.value);
+        setRoomId(formatted);
+    };
+
+    const joinRoom = async () => {
+        if (!roomId.trim() || roomId.replace(/-/g, '').length < 9) {
+            toast.error('Please enter a valid room code (XXX-XXX-XXX)');
             return;
         }
         if (!username.trim()) {
             toast.error('Please enter your username');
             return;
         }
-        navigate(`/editor/${roomId}`, { state: { username } });
+
+        setIsJoining(true);
+        
+        try {
+            // Check if room exists before joining
+            const socket = await initSocket();
+            
+            socket.emit(ACTIONS.ROOM_EXISTS, { roomId }, ({ exists }) => {
+                socket.disconnect(); // Disconnect this temporary socket
+                
+                if (exists) {
+                    // if room exists, proceed to join
+                    navigate(`/editor/${roomId}`, { state: { username } });
+                } else {
+                    // Room doesn't exist, ask if they want to create it
+                    toast((t) => (
+                        <div className="flex flex-col gap-2">
+                            <span>Room doesn't exist. Create it?</span>
+                            <div className="flex gap-2">
+                                <button
+                                    className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+                                    onClick={() => {
+                                        toast.dismiss(t.id);
+                                        navigate(`/editor/${roomId}`, { state: { username } });
+                                    }}
+                                >
+                                    Yes, create
+                                </button>
+                                <button
+                                    className="px-3 py-1 bg-gray-600 text-white rounded text-sm"
+                                    onClick={() => toast.dismiss(t.id)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    ), { duration: 10000 });
+                }
+                setIsJoining(false);
+            });
+        } catch (error) {
+            toast.error('Connection failed. Please try again.');
+            setIsJoining(false);
+        }
     };
 
     const handleKeyPress = (e) => {
@@ -70,17 +140,18 @@ const Home = () => {
                         <div className="space-y-4">
                             <div>
                                 <label htmlFor="roomId" className="block text-gray-300 text-sm font-medium mb-2">
-                                    Room ID
+                                    Room Code
                                 </label>
                                 <input
                                     id="roomId"
                                     type="text"
                                     autoComplete="room-id"
-                                    placeholder="Enter room ID"
+                                    placeholder="XXX-XXX-XXX"
                                     value={roomId}
-                                    onChange={(e) => setRoomId(e.target.value)}
+                                    onChange={handleRoomIdChange}
                                     onKeyUp={handleKeyPress}
-                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    maxLength={11}
+                                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition tracking-widest text-center font-mono text-lg"
                                 />
                             </div>
 
@@ -102,18 +173,19 @@ const Home = () => {
 
                             <button
                                 onClick={joinRoom}
-                                className="w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                                disabled={isJoining}
+                                className="w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Join Room
+                                {isJoining ? 'Checking...' : 'Join Room'}
                             </button>
 
                             <p className="text-center text-gray-400 text-sm">
-                                If you don&apos;t have a room ID,{' '}
+                                If you don&apos;t have a room code,{' '}
                                 <button
                                     onClick={createNewRoom}
                                     className="text-blue-400 hover:text-blue-300 font-medium underline"
                                 >
-                                    create one
+                                    generate one
                                 </button>
                             </p>
                         </div>

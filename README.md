@@ -13,7 +13,7 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 
 ✅ **Real-time code collaboration** - Code together in sync
 ✅ **Code execution** - Run code and see output in a built-in terminal  
-⏳ **Voice chat** - Coming soon  
+✅ **Cursor Syncing with colours**
 ✅ **Multi-language compilation** - Run code in C, C++, C#, Java, Python, Rust, Javascript, Typescript, Ruby, Go and PHP!  
 
 ## Tech Stack

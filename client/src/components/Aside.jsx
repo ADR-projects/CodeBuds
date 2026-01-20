@@ -1,6 +1,7 @@
 import toast from 'react-hot-toast';
+import { Crown, UserMinus } from 'lucide-react';
 
-const Aside = ({ users, currentUserName }) => {
+const Aside = ({ users, currentUserName, mySocketId, hostSocketId, isHost, onKickUser }) => {
   const avatarColors = [
     'bg-blue-500',
     'bg-green-500',
@@ -17,6 +18,31 @@ const Aside = ({ users, currentUserName }) => {
     }
   };
 
+  const handleKick = (socketId, username) => {
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <span>Kick <strong>{username}</strong> from the room?</span>
+        <div className="flex gap-2">
+          <button
+            className="px-3 py-1 bg-red-600 text-white rounded text-sm"
+            onClick={() => {
+              toast.dismiss(t.id);
+              onKickUser(socketId);
+            }}
+          >
+            Yes, kick
+          </button>
+          <button
+            className="px-3 py-1 bg-gray-600 text-white rounded text-sm"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), { duration: 10000 });
+  };
+
   return (
     <div className="h-full bg-gray-800 border-l border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-700">
@@ -26,27 +52,44 @@ const Aside = ({ users, currentUserName }) => {
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-3">
-          {users.map((client, index) => (
-            <div
-              key={client.socketId}
-              className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-650 transition"
-            >
+          {users.map((client, index) => {
+            const isClientHost = client.socketId === hostSocketId;
+            const isMe = client.socketId === mySocketId;
+            const canKick = isHost && !isMe;
+            
+            return (
               <div
-                className={`w-10 h-10 rounded-full ${avatarColors[index % avatarColors.length]
-                  } flex items-center justify-center text-white font-semibold`}
+                key={client.socketId}
+                className="flex items-center space-x-3 p-3 bg-gray-700 rounded-lg hover:bg-gray-650 transition group"
               >
-                {client.user?.username?.charAt(0).toUpperCase()}
+                <div
+                  className={`w-10 h-10 rounded-full ${avatarColors[index % avatarColors.length]
+                    } flex items-center justify-center text-white font-semibold relative`}
+                >
+                  {client.user?.username?.charAt(0).toUpperCase()}
+                  {isClientHost && (
+                    <Crown className="absolute -top-1 -right-1 w-4 h-4 text-yellow-400" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-medium truncate flex items-center gap-2">
+                    {client.user?.username}
+                    {isMe && <span className="text-gray-400 text-xs">(You)</span>}
+                    {isClientHost && <span className="text-yellow-400 text-xs">Host</span>}
+                  </p>
+                </div>
+                {canKick && (
+                  <button
+                    onClick={() => handleKick(client.socketId, client.user?.username)}
+                    className="opacity-90 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 cursor-pointer hover:bg-white rounded transition"
+                    title="Kick user"
+                  >
+                    <UserMinus className="w-5 h-5" />
+                  </button>
+                )}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-medium truncate">
-                  {client.user?.username === currentUserName ?
-                   `${client.user?.username}(You)` :
-                   client.user?.username
-                  }
-                </p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
