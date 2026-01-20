@@ -101,8 +101,9 @@ const Room = () => {
       });
 
       // Listening for language changes from other clients
-      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language }) => {
-        setLanguage(language);
+      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language: newLanguage }) => {
+        console.log('Received LANGUAGE_CHANGE:', newLanguage);
+        setLanguage(newLanguage);
       });
 
       // Listening for cursor changes from other clients
