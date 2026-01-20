@@ -48,7 +48,10 @@ const getLanguageExtension = (language) => {
 const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) => {
   const editorContainerRef = useRef(null);
   const editorViewRef = useRef(null);
-  const initialCodeRef = useRef(code); // Store initial code for editor creation
+  
+  // Update initialCode whenever code prop changes (for language changes)
+  const initialCodeRef = useRef(code);
+  initialCodeRef.current = code;
 
   // Expose methods to parent component via ref
   useImperativeHandle(ref, () => ({
@@ -120,11 +123,6 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
       view.destroy();
     };
   }, [language]);
-
-  // Update initial code ref when language changes (for editor recreation)
-  useEffect(() => {
-    initialCodeRef.current = code;
-  }, [language, code]);
 
   return (
     <div

@@ -19,13 +19,12 @@ const Room = () => {
   const navigate = useNavigate();
   const username = location.state?.username || 'Guest';
 
-  const [code, setCode] = useState(CODE_SNIPPETS['javascript']);
   const [output, setOutput] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
   const [language, setLanguage] = useState('javascript');
   const socketRef = useRef(null);
-  const codeRef = useRef(code); // Keep track of current code for syncing
+  const codeRef = useRef(CODE_SNIPPETS['javascript']); // Keep track of current code for syncing
   const [clients, setClients] = useState([]);
   const editorRef = useRef(null); // Ref to access Editor methods
   const remoteCursorsRef = useRef({}); // Track remote cursor positions { socketId: { pos, username } }
@@ -38,8 +37,9 @@ const Room = () => {
 
   // Update code when language changes
   useEffect(() => {
-    setCode(CODE_SNIPPETS[language] || '');
-    setLanguage(language);
+    const newCode = CODE_SNIPPETS[language] || '';
+    codeRef.current = newCode;
+    // Editor will recreate itself when language changes (see Editor.jsx useEffect dependency)
   }, [language]);
 
   useEffect(() => {
@@ -178,7 +178,7 @@ const Room = () => {
   };
 
   const handleCodeChange = (value) => {
-    setCode(value);
+    // Only update ref, don't trigger React re-render
     codeRef.current = value;
     // Emit local changes to other clients
     if (socketRef.current) {
@@ -212,9 +212,10 @@ const Room = () => {
 
   const runCode = () => {
     setOutput([]);
-    if (!code) return;
+    const currentCode = codeRef.current;
+    if (!currentCode) return;
     setIsLoading(true);
-    executeCode(language, code).then(response => {
+    executeCode(language, currentCode).then(response => {
       const outputData = response.run.output || 'Code executed successfully!';
       setOutput([outputData]);
     }).catch(error => {
@@ -237,7 +238,7 @@ const Room = () => {
   // Copy code to clipboard
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(codeRef.current);
       toast.success('Code copied to clipboard!');
     } catch (err) {
       toast.error('Failed to copy code');
@@ -260,7 +261,7 @@ const Room = () => {
       php: 'php',
     };
     const ext = extensions[language] || 'txt';
-    const blob = new Blob([code], { type: 'text/plain' });
+    const blob = new Blob([codeRef.current], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -350,7 +351,7 @@ const Room = () => {
               <Editor
                 ref={editorRef}
                 language={language}
-                code={code}
+                code={CODE_SNIPPETS[language]}
                 onChange={handleCodeChange}
                 onCursorChange={handleCursorChange}
               />
