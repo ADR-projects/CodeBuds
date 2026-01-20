@@ -48,6 +48,7 @@ const getLanguageExtension = (language) => {
 const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) => {
   const editorContainerRef = useRef(null);
   const editorViewRef = useRef(null);
+  const isRemoteUpdateRef = useRef(false); // Flag to track programmatic updates
   
   // Update initialCode whenever code prop changes (for language changes)
   const initialCodeRef = useRef(code);
@@ -67,6 +68,7 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
       if (editorViewRef.current) {
         const currentContent = editorViewRef.current.state.doc.toString();
         if (newCode !== currentContent) {
+          isRemoteUpdateRef.current = true; // Mark as remote update
           const cursorPos = editorViewRef.current.state.selection.main.head;
           editorViewRef.current.dispatch({
             changes: {
@@ -76,6 +78,7 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
             },
             selection: { anchor: Math.min(cursorPos, newCode.length) },
           });
+          isRemoteUpdateRef.current = false; // Reset flag
         }
       }
     },
@@ -86,7 +89,8 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
 
     // the listener for changes in the editor
     const updateListener = EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
+      if (update.docChanged && !isRemoteUpdateRef.current) {
+        // Only emit for local changes, not remote updates via setContent
         const value = update.state.doc.toString();
         onChange(value);
       }
