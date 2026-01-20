@@ -11,10 +11,10 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 
 ## Features
 
-✅ **Real-time code collaboration** - Code together in sync
-✅ **Code execution** - Run code and see output in a built-in terminal.
-✅ **Cursor Syncing with colours** See whose cursor is on the editor.
-✅ **Multi-language compilation** - Run code in C, C++, C#, Java, Python, Rust, Javascript, Typescript, Ruby, Go and PHP!  
+- **Real-time code collaboration** - Code together in sync
+- **Code execution** - Run code and see output in a built-in terminal.
+- **Cursor Syncing with colours** See whose cursor is on the editor.
+- **Multi-language compilation** - Run code in C, C++, C#, Java, Python, Rust, Javascript, Typescript, Ruby, Go and PHP!  
 
 ## Tech Stack
 
