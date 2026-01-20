@@ -67,6 +67,25 @@ const Room = () => {
       }
 
       // Set up listeners BEFORE joining to avoid race conditions
+      // Listening for full state sync (code + language) from existing users
+      socketRef.current.on(ACTIONS.SYNC_STATE, ({ code, language: newLanguage }) => {
+        console.log('Received SYNC_STATE:', { code: code?.substring(0, 50), language: newLanguage });
+        // Update language first (this will trigger Editor recreation)
+        if (newLanguage) {
+          setLanguage(newLanguage);
+        }
+        // Update code ref
+        if (code !== null && code !== undefined) {
+          codeRef.current = code;
+          // Use setTimeout to ensure Editor has recreated after language change
+          setTimeout(() => {
+            if (editorRef.current?.setContent) {
+              editorRef.current.setContent(code);
+            }
+          }, 100);
+        }
+      });
+
       // Listening for code changes from other clients
       socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
         if (code !== null && code !== undefined) {
@@ -146,6 +165,7 @@ const Room = () => {
       socketRef.current.off(ACTIONS.JOINED);
       socketRef.current.off(ACTIONS.DISCONNECTED);
       socketRef.current.off(ACTIONS.CODE_CHANGE);
+      socketRef.current.off(ACTIONS.SYNC_STATE);
       socketRef.current.off(ACTIONS.CURSOR_CHANGE);
       socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
       socketRef.current.off(ACTIONS.HOST_CHANGED);

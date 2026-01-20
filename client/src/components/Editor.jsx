@@ -15,7 +15,7 @@ import { csharp } from '@codemirror/legacy-modes/mode/clike';
 import { remoteCursorsField, updateCursors } from '../remoteCursors';
 
 // sorry it's just a lot of languages
-// TODO figure out Monaco's way of syncing code
+// todo let menu be updated
 
 const getLanguageExtension = (language) => {
   switch (language) {

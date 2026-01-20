@@ -131,15 +131,8 @@ io.on('connection', (socket) => {
 
   // Sync code and language - send current state to a specific client (when they join)
   socket.on(ACTIONS.SYNC_CODE, ({ socketId, code, language }) => {
-    // Send language FIRST so editor recreates with correct language mode
-    // Then send code to update the content
-    if (language) {
-      io.to(socketId).emit(ACTIONS.LANGUAGE_CHANGE, { language });
-    }
-    // Small delay to ensure language change is processed first
-    setTimeout(() => {
-      io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
-    }, 50);
+    // Send both code and language in a single SYNC_STATE event
+    io.to(socketId).emit(ACTIONS.SYNC_STATE, { code, language });
   });
   // Language change - broadcast to all other clients in the room
     socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {
