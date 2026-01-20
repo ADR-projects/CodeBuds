@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom'; // useNavigate hook added here
 import toast from 'react-hot-toast';
-import { Mic, MicOff } from 'lucide-react';
+import { Mic, MicOff, Copy, Download } from 'lucide-react';
 import Editor from './Editor';
 import LanguageMenu from './LanguageMenu';
 import Aside from './Aside';
@@ -101,7 +101,7 @@ const Room = () => {
       });
 
       // Listening for language changes from other clients
-      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({language}) => {
+      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language }) => {
         setLanguage(language);
       });
 
@@ -207,7 +207,7 @@ const Room = () => {
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
     // Emit language change to other clients
-    if(socketRef.current) {
+    if (socketRef.current) {
       socketRef.current.emit(ACTIONS.LANGUAGE_CHANGE, {
         roomId,
         language: newLanguage,
@@ -217,7 +217,7 @@ const Room = () => {
 
   const runCode = () => {
     setOutput([]);
-    if(!code) return;
+    if (!code) return;
     setIsLoading(true);
     executeCode(language, code).then(response => {
       const outputData = response.run.output || 'Code executed successfully!';
@@ -237,6 +237,42 @@ const Room = () => {
   const leaveRoom = () => {
     toast.success('Left the room');
     navigate('/');
+  };
+
+  // Copy code to clipboard
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      toast.success('Code copied to clipboard!');
+    } catch (err) {
+      toast.error('Failed to copy code');
+    }
+  };
+
+  // Download code as file
+  const downloadCode = () => {
+    const extensions = {
+      javascript: 'js',
+      typescript: 'ts',
+      python: 'py',
+      java: 'java',
+      c: 'c',
+      cpp: 'cpp',
+      csharp: 'cs',
+      go: 'go',
+      rust: 'rs',
+      ruby: 'rb',
+      php: 'php',
+    };
+    const ext = extensions[language] || 'txt';
+    const blob = new Blob([code], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `code.${ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('Code downloaded!');
   };
 
   // Redirect if username/room Id is not provided
@@ -265,12 +301,27 @@ const Room = () => {
               <h2 className="text-white font-semibold text-sm sm:text-base">CodeBuds</h2>
               <p className="text-gray-400 text-[10px] sm:text-xs font-mono">Room: {roomId}</p>
             </div>
-            <div>
-              <LanguageMenu selected={language} onChange={handleLanguageChange}></LanguageMenu>
+            <div className="flex items-center space-x-1 sm:space-x-2">
+              <LanguageMenu selected={language} onChange={handleLanguageChange} />
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={copyCode}
+                className="p-2 text-gray-400 hover:text-gray-800 rounded-lg hover:bg-white transition"
+                title="Copy code"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+              <button
+                onClick={downloadCode}
+                className="p-2 text-gray-400 hover:text-gray-800 rounded-2xl hover:bg-white transition"
+                title="Download code"
+              >
+                <Download className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
-
         <div className="flex items-center space-x-1 sm:space-x-3">
           {/* <button
             onClick={toggleMic}
@@ -281,7 +332,6 @@ const Room = () => {
           >
             {isMicOn ? <><Mic className="inline-block w-4 sm:w-5" /><span className="hidden sm:inline"> Mic On</span></> : <><MicOff className="inline-block w-4 sm:w-5" /><span className="hidden sm:inline"> Mic Off</span></>}
           </button> */}
-
           <button
             onClick={runCode}
             className="px-2 py-1 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition text-xs sm:text-base"
@@ -302,10 +352,10 @@ const Room = () => {
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex-1 border border-gray-700 m-1 sm:m-2 rounded-lg overflow-hidden bg-gray-800 shadow-xl">
             <div className="h-full">
-              <Editor 
+              <Editor
                 ref={editorRef}
-                language={language} 
-                code={code} 
+                language={language}
+                code={code}
                 onChange={handleCodeChange}
                 onCursorChange={handleCursorChange}
               />
@@ -316,8 +366,8 @@ const Room = () => {
         </div>
 
         <div className="w-full sm:w-80 shrink-0 h-70 sm:h-auto">
-          <Aside 
-            users={clients} 
+          <Aside
+            users={clients}
             currentUserName={location.state?.username}
             mySocketId={mySocketId}
             hostSocketId={hostSocketId}

@@ -22,6 +22,7 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 - **Backend**: Node.js + Express.js
 <!--- **Database**: MongoDB -->
 - **Real-time**: Socket.io
+-**Code & Cursor Sync**: Codemirror v6
 - **UI**: MacBook-inspired design
 
 ## Installation
