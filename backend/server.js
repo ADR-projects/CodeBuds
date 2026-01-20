@@ -19,10 +19,6 @@ app.get('/', (req, res) => {
   res.send('Hello from Codebuds backend!');
 });
 
-// app.use(express.static('build'));
-// app.use((req, res, next) => {
-//     res.sendFile(path.join(__dirname,'build' 'index.html'));
-// });
 
 const PORT = process.env.PORT || 5000;
 
@@ -46,7 +42,7 @@ io.on('connection', (socket) => {
   socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
     usersMap[socket.id] = { username, roomId };
     socket.join(roomId);
-    
+
     // Handle host assignment
     if (!roomsMap[roomId]) {
       // First member becomes host (new room)
@@ -62,11 +58,11 @@ io.on('connection', (socket) => {
       roomsMap[roomId].hostUsername = username;
       console.log(`${username} is now the host of room: ${roomId} (previous host gone)`);
     }
-    
+
     console.log(`${username} joined room: ${roomId}`);
     const clients = getAllClients(roomId);
     const hostSocketId = roomsMap[roomId]?.hostSocketId;
-    
+
     console.log('Current clients in room:', clients);
     clients.forEach(({ socketId, user }) => {
       io.to(socketId).emit(ACTIONS.JOINED, {
@@ -81,14 +77,14 @@ io.on('connection', (socket) => {
   socket.on('disconnecting', () => {
     const rooms = [...socket.rooms];
     const user = usersMap[socket.id];
-    
+
     rooms.forEach((roomId) => {
       // Check if disconnecting user is the host
       if (roomsMap[roomId]?.hostSocketId === socket.id) {
         const clients = getAllClients(roomId);
         // Find next member to become host (excluding current user)
         const nextHost = clients.find(c => c.socketId !== socket.id);
-        
+
         if (nextHost) {
           roomsMap[roomId].hostSocketId = nextHost.socketId;
           roomsMap[roomId].hostUsername = nextHost.user?.username;
@@ -103,7 +99,7 @@ io.on('connection', (socket) => {
           // Clear hostSocketId but keep the room data for potential reconnect
           roomsMap[roomId].hostSocketId = null;
           console.log(`Room ${roomId} is empty, keeping host info for ${roomsMap[roomId].hostUsername} in case of reconnect`);
-          
+
           // Clean up after 30 seconds if no one rejoins
           setTimeout(() => {
             const room = io.sockets.adapter.rooms.get(roomId);
@@ -114,7 +110,7 @@ io.on('connection', (socket) => {
           }, 30000);
         }
       }
-      
+
       socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
         socketId: socket.id,
         username: user?.username,
@@ -135,7 +131,7 @@ io.on('connection', (socket) => {
     io.to(socketId).emit(ACTIONS.SYNC_STATE, { code, language });
   });
   // Language change - broadcast to all other clients in the room
-    socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {
+  socket.on(ACTIONS.LANGUAGE_CHANGE, ({ roomId, language }) => {
     socket.in(roomId).emit(ACTIONS.LANGUAGE_CHANGE, { language });
   });
 
@@ -163,37 +159,37 @@ io.on('connection', (socket) => {
       console.log('Kick attempt by non-host rejected');
       return;
     }
-    
+
     const targetUser = usersMap[targetSocketId];
     if (!targetUser) return;
-    
+
     // Notify the kicked user
     io.to(targetSocketId).emit(ACTIONS.USER_KICKED, {
       kickedBy: usersMap[socket.id]?.username,
     });
-    
+
     // Remove from room
     const targetSocket = io.sockets.sockets.get(targetSocketId);
     if (targetSocket) {
       targetSocket.leave(roomId);
     }
-    
+
     // Notify others
     socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
       socketId: targetSocketId,
       username: targetUser?.username,
     });
-    
+
     // Also emit to the kicker (host) so their client list updates
     socket.emit(ACTIONS.DISCONNECTED, {
       socketId: targetSocketId,
       username: targetUser?.username,
     });
-    
+
     delete usersMap[targetSocketId];
     console.log(`${targetUser?.username} was kicked from room: ${roomId}`);
   });
-  
+
 }); // end of io.on connection
 
 server.listen(PORT, '0.0.0.0', () => {
