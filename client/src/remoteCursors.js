@@ -3,8 +3,14 @@ import { Decoration, EditorView, WidgetType } from '@codemirror/view';
 
 // Colors for different users
 const CURSOR_COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-  '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
+'#ae2012', // Red
+'#1b998b', // Green
+'#2364aa', // Blue  
+'#ee9b00', // Yellow
+'#7209b7', // Purple
+'#bb3e03', // Orange
+'#ef476f', // Pink
+'#06d6a0', // Teal
 ];
 
 // Effect to update remote cursors
