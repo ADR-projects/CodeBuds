@@ -12,8 +12,8 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 ## Features
 
 ✅ **Real-time code collaboration** - Code together in sync
-✅ **Code execution** - Run code and see output in a built-in terminal  
-✅ **Cursor Syncing with colours**
+✅ **Code execution** - Run code and see output in a built-in terminal.
+✅ **Cursor Syncing with colours** See whose cursor is on the editor.
 ✅ **Multi-language compilation** - Run code in C, C++, C#, Java, Python, Rust, Javascript, Typescript, Ruby, Go and PHP!  
 
 ## Tech Stack
@@ -42,14 +42,23 @@ npm install
 
 ## Usage
 
+Add a .env file in root directory with:
+```bash
+PORT= # the port you wish to host backend on, default is 5000
+```
+Add a .env file in .client/:
+```bash
+VITE_APP_BACKEND_URL= # your backend URL
+```
+
 ```bash 
 # Start backend server
 cd backend
-npm start
+npm run server
 
 # Start frontend (in a new terminal)
 cd client
-npm start
+npm run dev
 ```
 
 ## License
