@@ -49,6 +49,7 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
   const editorContainerRef = useRef(null);
   const editorViewRef = useRef(null);
   const editorRef = useRef(null);
+  const isLocalChange = useRef(false); // Track if change is from local typing
 
   // Expose methods to parent component via ref
   useImperativeHandle(ref, () => ({
@@ -67,8 +68,9 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
 
     // the listener for changes in the editor
     const updateListener = EditorView.updateListener.of((update) => {
-      console.log('Editor update:', update);
       if (update.docChanged) {
+        // Mark this as a local change so we don't re-apply it
+        isLocalChange.current = true;
         const value = update.state.doc.toString();
         onChange(value);
       }
@@ -106,17 +108,28 @@ const Editor = forwardRef(({ language, code, onChange, onCursorChange }, ref) =>
     };
   }, [language]);
 
-  // Update content when code prop changes externally ( we write new code)
+  // Update content when code prop changes externally (remote changes only)
   useEffect(() => {
     if (editorViewRef.current) {
+      // Skip if this is a local change we just made
+      if (isLocalChange.current) {
+        isLocalChange.current = false;
+        return;
+      }
+      
       const currentContent = editorViewRef.current.state.doc.toString();
       if (code !== currentContent) {
+        // Save cursor position
+        const cursorPos = editorViewRef.current.state.selection.main.head;
+        
         editorViewRef.current.dispatch({
           changes: {
             from: 0,
             to: currentContent.length,
             insert: code,
           },
+          // Try to restore cursor position (clamped to new content length)
+          selection: { anchor: Math.min(cursorPos, code.length) },
         });
       }
     }
