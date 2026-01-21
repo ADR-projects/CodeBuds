@@ -67,3 +67,8 @@ npm run dev
 ## License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Note
+
+This poroject has been hosted on vercel(frontend) and render(backend). When accessing the site, please wait some time for the backend to wake up!
+Thank you!
