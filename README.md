@@ -43,7 +43,7 @@ cd client
 npm install
 ```
 
-## Usage
+## Build Instructions
 
 Add a .env file in root directory with:
 ```bash
