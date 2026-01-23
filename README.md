@@ -5,6 +5,12 @@ A sleek real-time code collaboration web app with a MacBook-style interface.
 <!--![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)-->
 ![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=for-the-badge&logo=express&logoColor=%2361DAFB) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white) ![Socket.io](https://img.shields.io/badge/Socket.io-black?style=for-the-badge&logo=socket.io&badgeColor=010101)
 
+## Note
+
+This project has been hosted on Vercel(frontend) and Render(backend). When accessing the site, please wait some time for the backend to wake up!
+
+## Preview
+
 <img src="./client/public/joinSS.png" width="700"/>
 <img src="./client/public/previewRoom.png" width="700"/>
 <!-- ![Preview GIF-1](./client/public/gif_1.gif) -->
@@ -67,9 +73,3 @@ npm run dev
 ## License
 
 MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Note
-
-This project has been hosted on Vercel(frontend) and Render(backend). When accessing the site, please wait some time for the backend to wake up!
-
-Thank you!
